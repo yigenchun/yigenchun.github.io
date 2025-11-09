@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>高级拼图游戏</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="game-info">
+        <div>当前难度: <span id="current-level-display">3×3</span></div>
+        <div>用时: <span id="timer">00:00</span></div>
+        <div>步数: <span id="move-count">0</span></div>
+    </div>
+
+    <ul id="ul"></ul>
+
+    <div class="game-controls">
+        <button onclick="gameManager.resetGame()">重新开始</button>
+        <button onclick="gameManager.increaseDifficulty()">增加难度</button>
+        <button onclick="gameManager.decreaseDifficulty()">降低难度</button>
+        <select onchange="gameManager.changeImage(this.value)" style="margin-left:10px;padding:4px;">
+            <option value="0">默认图片</option>
+            <option value="1">图片1</option>
+            <option value="2">图片2</option>
+        </select>
+    </div>
+
+    <div class="ranking">
+        <h3>🏆 游戏排名</h3>
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>难度</th>
+                    <th>用时</th>
+                    <th>步数</th>
+                    <th>日期</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-body"></tbody>
+        </table>
+    </div>
+
+    <div class="share-section">
+        <button class="share-btn" onclick="gameManager.shareOnWechat()">微信分享</button>
+        <button class="share-btn" onclick="gameManager.shareOnQQ()">QQ分享</button>
+        <button class="share-btn" onclick="gameManager.copyGameLink()">复制链接</button>
+        <button class="share-btn" onclick="gameManager.clearRecord()" style="background: #e74c3c;">清除记录</button>
+    </div>
+
+    <script>
+        // ES6 Class 实现拼图游戏
+        class PuzzleGame {
+            constructor() {
+                this.oUl = null;
+                this.aLi = null;
+                this.len = 0;
+                this.oLi = null;
+                this.num = 0;
+                this.zIndex = 2;
+                this.arr = [];
+            }
+
+            init(id, num) {
+                this.oUl = document.querySelector(id);
+                this.oUl.innerHTML = this.generatePieces(num);
+                this.aLi = this.oUl.querySelectorAll("li");
+                this.len = this.aLi.length;
+                this.num = num;
+
+                this.oLi = this.aLi[this.len - 1];
+                this.oLi.className = 'active';
+                this.positionPieces();
+                this.bindClickEvents();
+                this.jian();
+            }
+
+            // 判断是否完成拼图
+            checkPing() {
+                let arr1 = [];
+                let arr2 = [];
+                let n = 0;
+
+                for (let i = 0; i < this.len; i++) {
+                    arr1.push(this.aLi[i].index);
+                    arr2.push(this.arr[i][2]);
+                }
+
+                for (let i = 0; i < this.len; i++) {
+                    if (arr1[i] === arr2[i]) {
+                        n += 1;
+                    }
+                }
+
+                if (n === this.len) {
+                    alert('闯关成功');
+                    this.num++;
+
+                    if (this.num <= 8) {
+                        setTimeout(() => {
+                            this.init('ul', this.num);
+                        }, 1000);
+                    } else {
+                        alert('恭喜！你已通关所有难度！');
+                        this.num = 8;
+                    }
+
+                    return true;
+                }
+                return false;
+            }
+
+            // 通过index找到li
+            findLiByIndex(index) {
+                for (let i = 0; i < this.len; i++) {
+                    if (this.aLi[i].index === index) {
+                        return this.aLi[i];
+                    }
+                }
+                return null;
+            }
+
+            // 键盘移动
+            jian() {
+                document.onkeydown = (ev) => {
+                    ev = ev || event;
+                    let targetLi = null;
+
+                    switch (ev.keyCode) {
+                        case 37: // 左
+                            if (this.oLi.index - 1 >= 0) {
+                                targetLi = this.findLiByIndex(this.oLi.index - 1);
+                            }
+                            break;
+                        case 39: // 右
+                            if (this.oLi.index + 1 <= this.len - 1) {
+                                targetLi = this.findLiByIndex(this.oLi.index + 1);
+                            }
+                            break;
+                        case 38: // 上
+                            if (this.oLi.index - this.num >= 0) {
+                                targetLi = this.findLiByIndex(this.oLi.index - this.num);
+                            }
+                            break;
+                        case 40: // 下
+                            if (this.oLi.index + this.num <= this.len - 1) {
+                                targetLi = this.findLiByIndex(this.oLi.index + this.num);
+                            }
+                            break;
+                    }
+
+                    if (targetLi) {
+                        this.move(targetLi);
+                    }
+                };
+            }
+
+            // 判断是否可以移动
+            canMove(li) {
+                const index = li.index;
+                const num = this.oLi.index;
+
+                if (num % this.num === 0) { // 左边界
+                    return index + this.num === num || index - this.num === num || index - 1 === num;
+                } else if (num % this.num === this.num - 1) { // 右边界
+                    return index + this.num === num || index - this.num === num || index + 1 === num;
+                } else { // 中间
+                    return index + this.num === num || index - this.num === num || index - 1 === num || index + 1 === num;
+                }
+            }
+
+            // 移动
+            move(li) {
+                if (this.canMove(li)) {
+                    li.style.left = this.arr[this.oLi.index][0] + 'px';
+                    li.style.top = this.arr[this.oLi.index][1] + 'px';
+                    this.oLi.style.left = this.arr[li.index][0] + 'px';
+                    this.oLi.style.top = this.arr[li.index][1] + 'px';
+
+                    [this.oLi.index, li.index] = [li.index, this.oLi.index];
+
+                    // 调用步数移动计算
+                    if (typeof gameManager !== 'undefined') {
+                        gameManager.incrementMoveCount();
+                    }
+
+                    return this.checkPing();
+                }
+                return false;
+            }
+
+            // 点击事件
+            bindClickEvents() {
+                for (let i = 0; i < this.len; i++) {
+                    this.aLi[i].onclick = () => {
+                        this.aLi[i].style.zIndex = this.zIndex++;
+                        this.move(this.aLi[i]);
+                    };
+                }
+            }
+
+            // 定位拼图块
+            positionPieces() {
+                let arr1 = [];
+                let arrA = [];
+
+                for (let i = 0; i < this.len; i++) {
+                    arr1.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
+                    arrA.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
+                }
+
+                this.arr = arrA;
+
+                // 随机排序
+                let arr2 = [];
+                for (let i = 0; i < this.len - 1; i++) {
+                    arr2.push(arr1[i]);
+                }
+
+                // arr2.sort(() => Math.random() - 0.5);
+                arr2.push(arr1[this.len - 1]);
+
+                // 检查可解性
+                let arr3 = [];
+                let inversionCount = 0;
+
+                for (let i = 0; i < this.len; i++) {
+                    arr3.push(arr2[i][2]);
+                }
+
+                for (let i = 0; i < this.len; i++) {
+                    let b = arr3[i];
+                    for (let j = i; j < this.len; j++) {
+                        let c = arr3[j];
+                        if (b > c) {
+                            inversionCount += 1;
+                        }
+                    }
+                }
+
+                if (inversionCount % 2 === 0) {
+                    console.log('加油');
+                } else {
+                    console.log('你不会成功的');
+                    this.positionPieces();
+                    return false;
+                }
+
+                arr1 = arr2;
+
+                for (let i = 0; i < this.len; i++) {
+                    // if (this.num >= 5) {
+                        this.aLi[i].innerHTML = i + 1;
+                    // }
+
+                    this.aLi[i].style.position = 'absolute';
+                    this.aLi[i].style.left = arr1[i][0] + 'px';
+                    this.aLi[i].style.top = arr1[i][1] + 'px';
+                    this.aLi[i].index = arr1[i][2];
+                    this.aLi[i].style.margin = 0;
+                    this.aLi[i].style.backgroundSize = this.num * 100 + 'px';
+                    this.aLi[i].style.backgroundPosition =
+                        (i % this.num) * -100 + "px " +
+                        ((i - (i % this.num)) / this.num) * -100 + "px";
+                }
+            }
+
+            // 生成拼图块
+            generatePieces(num) {
+                this.oUl.style.width = 2 + num * 2 + num * 100 + "px";
+                this.oUl.style.height = num * 2 + num * 100 + "px";
+
+                let n = num * num;
+                let str = '';
+                for (let i = 0; i < n; i++) {
+                    str += "<li></li>";
+                }
+                return str;
+            }
+
+
+        }
+
+        // 游戏管理器类
+        class GameManager {
+            constructor() {
+                this.puzzleGame = null;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.moveCount = 0;
+                this.currentLevel = 3;
+                this.gameStarted = false;
+                this.imageSources = [
+                    'bili.jpg', 
+                    'img1.jpg', 
+                    'img3.jpg', 
+                ];
+                this.currentImageIndex = 0;
+            }
+
+            init(puzzleGame) {
+                this.puzzleGame = puzzleGame;
+                this.updateLevelDisplay();
+                this.loadRankings();
+                this.showImagePreview();
+                this.overridePuzzleGameMethods();
+            }
+
+            // 重写拼图游戏方法
+            overridePuzzleGameMethods() {
+                const originalMove = this.puzzleGame.move.bind(this.puzzleGame);
+                const originalCheckPing = this.puzzleGame.checkPing.bind(this.puzzleGame);
+                const originalInit = this.puzzleGame.init.bind(this.puzzleGame);
+
+                // 重写move方法
+                this.puzzleGame.move = (li) => {
+                    // 第一次移动时开始计时
+                    if (!this.gameStarted) {
+                        this.hideImagePreview();
+                        this.startTimer();
+                        this.gameStarted = true;
+                    }
+
+                    if (originalMove(li)) {
+                        this.moveCount++;
+                        document.getElementById('move-count').textContent = this.moveCount;
+                        return true;
+                    }
+                    return false;
+                };
+
+                // 重写checkPing方法
+                this.puzzleGame.checkPing = () => {
+                    if (originalCheckPing()) {
+                        // 记录成绩
+                        this.recordScore();
+                        this.currentLevel++;
+                        this.updateLevelDisplay();
+
+                        setTimeout(() => {
+                            this.puzzleGame.init('ul', this.puzzleGame.num);
+                            // 重置游戏状态并显示新图片
+                            this.resetState();
+                            this.showImagePreview();
+                        }, 1000);
+                        return true;
+                    }
+                    return false;
+                };
+
+                // 重写init方法以同步难度
+                this.puzzleGame.init = (id, num) => {
+                    this.currentLevel = num;
+                    this.updateLevelDisplay();
+                    return originalInit(id, num);
+                };
+            }
+
+
+            //切换图片
+            changeImage(imageIndex) {
+                this.currentImageIndex = Number(imageIndex); 
+                this.resetGame(); 
+                this.showImagePreview();
+            }
+
+
+            //更新拼图碎片背景图
+            updatePuzzleBackground() {
+                if (!this.puzzleGame || !this.puzzleGame.aLi) return;
+                const currentImage = this.imageSources[this.currentImageIndex]; 
+                const num = this.currentLevel; 
+                const pieces = this.puzzleGame.aLi;
+
+                // 循环给每个碎片设置新背景图
+                for (let i = 0; i < pieces.length; i++) {
+                    pieces[i].style.backgroundImage = `url(${currentImage})`;
+                    
+                    pieces[i].style.backgroundPosition =
+                        (i % num) * -100 + "px " +
+                        ((i - (i % num)) / num) * -100 + "px";
+                }
+            }
+
+
+
+            showImagePreview() {
+                // 移除已存在的预览层
+                const existingPreview = document.querySelector('.image-preview');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+
+                // 创建新的预览层（使用当前选中的图片）
+                const preview = document.createElement('div');
+                preview.className = 'image-preview';
+                preview.style.backgroundImage = `url(${this.imageSources[this.currentImageIndex]})`;
+                document.getElementById('ul').appendChild(preview);
+
+                // 点击事件
+                preview.addEventListener('click', () => {
+                    this.hideImagePreview();
+                    this.startTimer();
+                    this.gameStarted = true;
+                });
+            }
+
+            // 隐藏完整图片
+            hideImagePreview() {
+                const preview = document.querySelector('.image-preview');
+                if (preview) {
+                    preview.classList.add('hidden');
+                    // 1秒后完全移除
+                    setTimeout(() => {
+                        if (preview.parentNode) {
+                            preview.parentNode.removeChild(preview);
+                        }
+                    }, 500);
+                }
+            }
+
+            // 计时器
+            startTimer() {
+                this.startTime = new Date();
+                this.timerInterval = setInterval(() => {
+                    const now = new Date();
+                    const diff = Math.floor((now - this.startTime) / 1000);
+                    const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+                    const seconds = (diff % 60).toString().padStart(2, '0');
+                    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+                }, 1000);
+            }
+
+            // 重置游戏
+            resetGame() {
+                this.resetState();
+                this.puzzleGame.init("ul", this.currentLevel);
+                this.updatePuzzleBackground();
+            }
+
+            // 重置所有状态
+            resetState() {
+                clearInterval(this.timerInterval);
+                this.moveCount = 0;
+                this.gameStarted = false;
+                document.getElementById('move-count').textContent = '0';
+                document.getElementById('timer').textContent = '00:00';
+            }
+
+            // 增加难度
+            increaseDifficulty() {
+                if (this.currentLevel < 8) {
+                    this.currentLevel++;
+                    this.updateLevelDisplay();
+                    this.resetGame();
+                } else {
+                    alert('已经是最高难度了！');
+                }
+            }
+
+            // 移动计数
+            incrementMoveCount() {
+                this.moveCount++;
+                document.getElementById('move-count').textContent = this.moveCount;
+            }
+
+            // 清除记录
+            clearRecord() {
+                if (confirm('确定要清除所有游戏记录吗？此操作不可恢复！')) {
+                    localStorage.removeItem('puzzleRankings');
+                    this.loadRankings();
+                    alert('游戏记录已清除！');
+                }
+            }
+
+            // 降低难度
+            decreaseDifficulty() {
+                if (this.currentLevel > 3) {
+                    this.currentLevel--;
+                    this.updateLevelDisplay();
+                    this.resetGame();
+                } else {
+                    alert('已经是最低难度了！');
+                }
+            }
+
+            // 更新显示当前等级
+            updateLevelDisplay() {
+                document.getElementById('current-level-display').textContent = `${this.currentLevel}×${this.currentLevel}`;
+                // 同步更新PuzzleGame实例的难度
+                if (this.puzzleGame) {
+                    this.puzzleGame.num = this.currentLevel;
+                }
+            }
+
+            // 记录成绩
+            recordScore() {
+                const time = document.getElementById('timer').textContent;
+                const moves = this.moveCount;
+                const level = this.currentLevel;
+
+                console.log('记录成绩:', { level, time, moves });
+
+                const score = {
+                    level: level,
+                    time: time,
+                    moves: moves,
+                    date: new Date().toLocaleString('zh-CN')
+                };
+
+                let rankings = JSON.parse(localStorage.getItem('puzzleRankings') || '[]');
+                rankings.push(score);
+
+                // 按时间排序
+                rankings.sort((a, b) => {
+                    const [aMin, aSec] = a.time.split(':').map(Number);
+                    const [bMin, bSec] = b.time.split(':').map(Number);
+                    return (aMin * 60 + aSec) - (bMin * 60 + bSec);
+                });
+
+                // 只保留前5名
+                rankings = rankings.slice(0, 5);
+                localStorage.setItem('puzzleRankings', JSON.stringify(rankings));
+
+                this.loadRankings();
+            }
+
+            // 将信息保存到本地并显示
+            loadRankings() {
+                const rankings = JSON.parse(localStorage.getItem('puzzleRankings') || '[]');
+                const tbody = document.getElementById('ranking-body');
+                tbody.innerHTML = '';
+
+                if (rankings.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">暂无记录</td></tr>';
+                    return;
+                }
+
+                rankings.forEach((score, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${score.level}×${score.level}</td>
+                        <td>${score.time}</td>
+                        <td>${score.moves}</td>
+                        <td>${score.date}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            shareOnWechat() {
+                alert('请使用微信扫描分享页面！\n游戏成绩：' +
+                    document.getElementById('timer').textContent + ' 用时，' +
+                    this.moveCount + ' 步数');
+            }
+
+            shareOnQQ() {
+                alert('已生成QQ分享链接！\n游戏成绩：' +
+                    document.getElementById('timer').textContent + ' 用时，' +
+                    this.moveCount + ' 步数');
+            }
+
+            copyGameLink() {
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('游戏链接已复制到剪贴板！');
+                }).catch(() => {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = window.location.href;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('游戏链接已复制到剪贴板！');
+                });
+            }
+        }
+
+        // 初始化游戏
+        window.onload = function () {
+            const puzzleGame = new PuzzleGame();
+            puzzleGame.init("ul", 3);
+
+            // 初始化游戏管理器
+            gameManager.init(puzzleGame);
+            gameManager.updatePuzzleBackground();
+        }
+
+        // 创建全局游戏管理器实例
+        const gameManager = new GameManager();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>高级拼图游戏</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+        body,
+        ul {
+            margin: 0;
+            padding: 0;
+        }
+
+        #ul {
+            background: lemonchiffon;
+            width: 308px;
+            height: 306px;
+            position: relative;
+            padding-top: 2px;
+            border: 4px solid #000;
+            border-radius: 4px;
+            margin: 20px auto;
+        }
+
+        #ul li {
+            width: 100px;
+            height: 100px;
+            list-style-type: none;
+            background: url(bili.jpg) pink;
+            float: left;
+            margin: 0 0 2px 2px;
+
+            line-height: 100px;
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 1px #000;
+            font-size: 20px;
+        }
+
+        #ul li.active {
+            background: lemonchiffon;
+        }
+
+        /* 新增样式 */
+        .game-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .game-info {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .ranking {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+            border: 2px solid #333;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .ranking h3 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th,
+        .ranking-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .ranking-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .share-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .share-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .share-btn:hover {
+            background: #3367d6;
+        }
+
+        .current-level {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+
+         /* 完整图片预览层 */
+    .image-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        z-index: 999;
+        border-radius: 4px;
+        transition: opacity 0.5s ease;
+    }
+    
+    .image-preview.hidden {
+        opacity: 0;
+        pointer-events: none;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="game-info">
+        <div>当前难度: <span id="current-level-display">3×3</span></div>
+        <div>用时: <span id="timer">00:00</span></div>
+        <div>步数: <span id="move-count">0</span></div>
+    </div>
+
+    <ul id="ul">
+        <!-- <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li class="active"></li> -->
+    </ul>
+
+    <!-- 游戏控制 -->
+    <div class="game-controls">
+        <button onclick="gameManager.resetGame()">重新开始</button>
+        <button onclick="gameManager.increaseDifficulty()">增加难度</button>
+        <button onclick="gameManager.decreaseDifficulty()">降低难度</button>
+    </div>
+
+    <!-- 排名显示 -->
+    <div class="ranking">
+        <h3>🏆 游戏排名</h3>
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>难度</th>
+                    <th>用时</th>
+                    <th>步数</th>
+                    <th>日期</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-body">
+                <!-- 排名数据将通过JavaScript动态生成 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 分享功能 -->
+    <div class="share-section">
+        <button class="share-btn" onclick="gameManager.shareOnWechat()">微信分享</button>
+        <button class="share-btn" onclick="gameManager.shareOnQQ()">QQ分享</button>
+        <button class="share-btn" onclick="gameManager.copyGameLink()">复制链接</button>
+        <button class="share-btn" onclick="gameManager.clearRecord()" style="background: #e74c3c;">清除记录</button>
+    </div>
+</body>
+
+<script>
+    // 您的原有代码保持不变
+    window.onload = function () {
+        let p1 = new Ping();
+        p1.init("ul", 3);
+
+        // 初始化游戏管理器
+        gameManager.init(p1);
+    }
+
+    function Ping() {
+        this.oUl = null;;
+        this.aLi = null;
+        this.len = 0;
+        this.oLi = null;
+        this.num = 0;
+        this.zIndex = 2;
+        this.arr = [];
+    }
+    Ping.prototype.init = function (id, num) {
+        this.oUl = document.querySelector(id);
+        this.oUl.innerHTML = this.sheng(num);
+        this.aLi = this.oUl.querySelectorAll("li");
+        this.len = this.aLi.length;
+        console.log(this.aLi.length)
+        this.num = num;
+
+        this.oLi = this.aLi[this.len - 1];
+        this.oLi.className = 'active';
+        this.ding();
+        this.click();
+        this.jian()
+
+    }
+
+    //判断合并
+    Ping.prototype.he = function () {
+        let arr1 = []
+        let arr2 = []
+        let n = 0
+        for (let i = 0; i < this.len; i++) {
+            arr1.push(this.aLi[i].index)
+            arr2.push(this.arr[i][2])
+
+        }
+        for (let i = 0; i < this.len; i++) {
+            if (arr1[i] == arr2[i]) {
+                n += 1
+            }
+
+        }
+        if (n == this.len) {
+            alert('闯关成功')
+            this.num++
+            let This = this
+            if (This.num <= 8) {
+                setTimeout(function () {
+                    This.init('ul', This.num)
+                }, 1000)
+            } else {
+                alert('恭喜！你已通关所有难度！')
+                this.num = 8
+            }
+        }
+    }
+    //通过index找到li
+    Ping.prototype.Li = function (index) {
+        for (let i = 0; i < this.len; i++) {
+            if (this.aLi[i].index == index) {
+                return this.aLi[i]
+            }
+        }
+    }
+    //键盘移动
+    Ping.prototype.jian = function () {
+        let This = this
+        document.onkeydown = function (ev) {
+
+            ev = ev || event;
+            if (ev.keyCode == 37) {//zuo
+                console.log(ev.keyCode)
+                if (This.oLi.index - 1 < 0) {
+                    This.move(This.Li(This.oLi.index))
+                } else {
+                    This.move(This.Li(This.oLi.index - 1))
+
+                }
+            } else if (ev.keyCode == 39) {//you
+                console.log(ev.keyCode)
+                if (This.oLi.index + 1 > This.len - 1) {
+                    This.move(This.Li(This.oLi.index))
+                } else {
+                    This.move(This.Li(This.oLi.index + 1))
+
+                }
+
+            } else if (ev.keyCode == 38) {//shang
+                console.log(ev.keyCode)
+                if (This.oLi.index - This.num < 0) {
+                    This.move(This.Li(This.oLi.index))
+                } else {
+                    This.move(This.Li(This.oLi.index - This.num))
+
+                }
+
+            } else if (ev.keyCode == 40) {//xia
+                console.log(ev.keyCode)
+                if (This.oLi.index + This.num > This.len - 1) {
+                    This.move(This.Li(This.oLi.index))
+                } else {
+                    This.move(This.Li(This.oLi.index + This.num))
+
+                }
+
+            }
+        }
+    }
+
+    //判断是否可以移动
+    Ping.prototype.pan = function (li) {
+        let index = li.index
+        let num = this.oLi.index
+        if (num % this.num == 0) {//zuo
+            if (index + this.num == num || index - this.num == num || index - 1 == num) {
+                return true
+            }
+
+        } else if (num % this.num == this.num - 1) {
+            if (index + this.num == num || index - this.num == num || index + 1 == num) {
+                return true
+            }//you
+
+        } else {//zhong
+            if (index + this.num == num || index - this.num == num || index - 1 == num || index + 1 == num) {
+                return true
+            }
+        }
+        return false
+    }
+    //移动
+    Ping.prototype.move = function (li) {
+        if (this.pan(li)) {
+
+            li.style.left = this.arr[this.oLi.index][0] + 'px';
+            li.style.top = this.arr[this.oLi.index][1] + 'px';
+            this.oLi.style.left = this.arr[li.index][0] + 'px';
+            this.oLi.style.top = this.arr[li.index][1] + 'px';
+
+            [this.oLi.index, li.index] = [li.index, this.oLi.index];
+
+            //调用步数移动计算
+            if (typeof gameManager !== 'undefined') {
+                gameManager.incrementMoveCount();
+            }
+
+            this.he()
+        }
+
+    }
+    //点击
+    Ping.prototype.click = function () {
+        let This = this;
+        for (let i = 0; i < this.len; i++) {
+            this.aLi[i].onclick = function () {
+                this.style.zIndex = This.zIndex++;
+
+                // console.log(this.index)
+                This.move(this);
+            }
+        }
+    }
+    //定位
+    Ping.prototype.ding = function () {
+        let arr1 = [];
+        let arrA = [];
+        for (let i = 0; i < this.len; i++) {
+            arr1.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
+            arrA.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
+        }
+        this.arr = arrA;
+        //随机
+        let arr2 = []
+        for (let i = 0; i < this.len - 1; i++) {
+            arr2.push(arr1[i]);
+        }
+        //排序
+        arr2.sort(function (a, b) {
+            return Math.random() - 0.5;
+        })
+        arr2.push(arr1[this.len - 1])
+        console.log(arr2)
+
+        let arr3 = [];
+        let a = 0;
+        for (let i = 0; i < this.len; i++) {
+            arr3.push(arr2[i][2]);
+
+        }
+        for (let i = 0; i < this.len; i++) {
+            let b = arr3[i];
+            for (let j = i; j < this.len; j++) {
+                let c = arr3[j];
+                if (b > c) {
+                    a += 1;
+                }
+            }
+        }
+        console.log(arr2);
+        if (a % 2 == 0) {
+            console.log('加油');
+        } else {
+            console.log('你不会成功的')
+            this.ding();
+            return false
+        }
+        arr1 = arr2
+        for (let i = 0; i < this.len; i++) {
+            if (this.num >= 5) {
+                this.aLi[i].innerHTML = i + 1
+            }
+            this.aLi[i].style.position = 'absolute';
+            this.aLi[i].style.left = arr1[i][0] + 'px';
+            this.aLi[i].style.top = arr1[i][1] + 'px';
+            this.aLi[i].index = arr1[i][2];
+            this.aLi[i].style.margin = 0;
+            this.aLi[i].style.backgroundSize = this.num * 100 + 'px';
+            this.aLi[i].style.backgroundPosition = (i % this.num) * -100 + "px " + ((i - (i % this.num)) / this.num) * -100 + "px";
+        }
+    }
+
+    //生成li
+    Ping.prototype.sheng = function (num) {
+        this.oUl.style.width = 2 + num * 2 + num * 100 + "px";
+        this.oUl.style.height = num * 2 + num * 100 + "px";
+
+        let n = num * num;
+        let str = '';
+        for (let i = 0; i < n; i++) {
+            str += "<li></li>";
+        }
+        return str;
+    }
+
+    // ！！！！！！！ 游戏管理器 ！！！！！！！
+    const gameManager = {
+        pingInstance: null,
+        startTime: null,
+        timerInterval: null,
+        moveCount: 0,
+        currentLevel: 3,
+        gameStarted: false,
+
+        init: function (pingInstance) {
+            this.pingInstance = pingInstance;
+            this.updateLevelDisplay();
+            this.loadRankings();
+            //显示原始图片
+            this.showImagePreview();
+
+            
+            const originalMove = this.pingInstance.move;
+            const originalHe = this.pingInstance.he;
+            const originalInit = this.pingInstance.init;
+            const self = this;
+
+            // 重写move方法
+            this.pingInstance.move = function (li) {
+                // 第一次移动时开始计时
+                if (!self.gameStarted) {
+                    //隐藏原始图片
+                    self.hideImagePreview();
+                    self.startTimer();
+                    self.gameStarted = true;
+                }
+
+                if (originalMove.call(this, li)) {
+                    self.moveCount++;
+                    document.getElementById('move-count').textContent = self.moveCount;
+                    return true;
+                }
+                return false;
+            };
+
+            // 重写he方法
+            this.pingInstance.he = function () {
+                let arr1 = []
+                let arr2 = []
+                let n = 0
+                for (let i = 0; i < this.len; i++) {
+                    arr1.push(this.aLi[i].index)
+                    arr2.push(this.arr[i][2])
+                }
+                for (let i = 0; i < this.len; i++) {
+                    if (arr1[i] == arr2[i]) {
+                        n += 1
+                    }
+                }
+                if (n == this.len) {
+                    // 记录成绩
+                    self.recordScore();
+
+                    alert('闯关成功')
+                    self.currentLevel++;
+                    self.updateLevelDisplay();
+
+                    let This = this
+                    setTimeout(function () {
+                        This.init('ul', This.num)
+                        // 重置游戏状态并显示新图片
+                        self.resetState();
+                        self.showImagePreview();
+                    }, 1000)
+                }
+            };
+
+            // 重写init方法以同步难度
+            this.pingInstance.init = function (id, num) {
+                self.currentLevel = num;
+                self.updateLevelDisplay();
+                return originalInit.call(this, id, num);
+            };
+        },
+
+          //显示完整图片
+        showImagePreview: function() {
+            // 移除已存在的预览层
+            const existingPreview = document.querySelector('.image-preview');
+            if (existingPreview) {
+                existingPreview.remove();
+            }
+            
+            // 创建新的预览层
+            const preview = document.createElement('div');
+            preview.className = 'image-preview';
+            preview.style.backgroundImage = 'url(bili.jpg)';
+            document.getElementById('ul').appendChild(preview);
+            
+            // 点击事件，点击图片也可以开始游戏
+            preview.addEventListener('click', () => {
+                this.hideImagePreview();
+                this.startTimer();
+                this.gameStarted = true;
+            });
+        },
+
+        // 隐藏完整图片
+        hideImagePreview: function() {
+            const preview = document.querySelector('.image-preview');
+            if (preview) {
+                preview.classList.add('hidden');
+                // 1秒后完全移除
+                setTimeout(() => {
+                    if (preview.parentNode) {
+                        preview.parentNode.removeChild(preview);
+                    }
+                }, 500);
+            }
+        },
+
+        //计时器
+        startTimer: function () {
+            this.startTime = new Date();
+            this.timerInterval = setInterval(() => {
+                const now = new Date();
+                const diff = Math.floor((now - this.startTime) / 1000);
+                const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
+                const seconds = (diff % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        },
+
+        //重置游戏
+        resetGame: function () {
+            this.resetState();
+            this.pingInstance.init("ul", this.currentLevel);
+        },
+
+            //重置所有状态
+        resetState: function () {
+            clearInterval(this.timerInterval);
+            this.moveCount = 0;
+            this.gameStarted = false;
+            document.getElementById('move-count').textContent = '0';
+            document.getElementById('timer').textContent = '00:00';
+        },
+
+        //做高难度判断
+        increaseDifficulty: function () {
+            if (this.currentLevel < 8) {
+                this.currentLevel++;
+                this.updateLevelDisplay();
+                this.resetGame();
+            } else {
+                alert('已经是最高难度了！');
+            }
+        },
+
+
+        //移动计数
+        incrementMoveCount: function () {
+            this.moveCount++;
+            document.getElementById('move-count').textContent = this.moveCount;
+        },
+
+        //清除记录
+        clearRecord: function () {
+            if (confirm('确定要清除所有游戏记录吗？此操作不可恢复！')) {
+                localStorage.removeItem('puzzleRankings');
+                this.loadRankings();
+                alert('游戏记录已清除！');
+            }
+        },
+
+        //最低难度判断
+        decreaseDifficulty: function () {
+            if (this.currentLevel > 3) {
+                this.currentLevel--;
+                this.updateLevelDisplay();
+                this.resetGame();
+            } else {
+                alert('已经是最低难度了！');
+            }
+        },
+
+        //更新显示当前等级
+        updateLevelDisplay: function () {
+            document.getElementById('current-level-display').textContent = `${this.currentLevel}×${this.currentLevel}`;
+            // 同步更新Ping实例的难度
+            if (this.pingInstance) {
+                this.pingInstance.num = this.currentLevel;
+            }
+        },
+
+        //记录成绩
+        recordScore: function () {
+            const time = document.getElementById('timer').textContent;
+            const moves = this.moveCount;
+            const level = this.currentLevel;
+
+            console.log('记录成绩:', { level, time, moves });
+
+            const score = {
+                level: level,
+                time: time,
+                moves: moves,
+                date: new Date().toLocaleString('zh-CN')
+            };
+
+            let rankings = JSON.parse(localStorage.getItem('puzzleRankings') || '[]');
+            rankings.push(score);
+
+            // 按时间排序
+            rankings.sort((a, b) => {
+                const [aMin, aSec] = a.time.split(':').map(Number);
+                const [bMin, bSec] = b.time.split(':').map(Number);
+                return (aMin * 60 + aSec) - (bMin * 60 + bSec);
+            });
+
+            // 只保留前10名
+            rankings = rankings.slice(0, 5);
+            localStorage.setItem('puzzleRankings', JSON.stringify(rankings));
+
+            this.loadRankings();
+        },
+
+        //将信息保存到本地并显示
+        loadRankings: function () {
+            const rankings = JSON.parse(localStorage.getItem('puzzleRankings') || '[]');
+            const tbody = document.getElementById('ranking-body');
+            tbody.innerHTML = '';
+
+            if (rankings.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">暂无记录</td></tr>';
+                return;
+            }
+
+            rankings.forEach((score, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${score.level}×${score.level}</td>
+                    <td>${score.time}</td>
+                    <td>${score.moves}</td>
+                    <td>${score.date}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        },
+
+        shareOnWechat: function () {
+            alert('请使用微信扫描分享页面！\n游戏成绩：' +
+                document.getElementById('timer').textContent + ' 用时，' +
+                this.moveCount + ' 步数');
+        },
+
+        shareOnQQ: function () {
+            alert('已生成QQ分享链接！\n游戏成绩：' +
+                document.getElementById('timer').textContent + ' 用时，' +
+                this.moveCount + ' 步数');
+        },
+
+        copyGameLink: function () {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('游戏链接已复制到剪贴板！');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = window.location.href;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('游戏链接已复制到剪贴板！');
+            });
+        }
+    };
+</script>
+
+</html>

@@ -1,0 +1,147 @@
+body,
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+    /* 给 body 元素设置背景（body 是页面的可视区域根容器） */
+        body {
+            /* 1. 设置背景图片路径（本地图片/网络图片） */
+            background-image: url("img4.jpg"); /* 替换为实际路径 */
+            
+            /* 2. 关键辅助属性（必加，避免图片重复/拉伸异常） */
+            background-repeat: no-repeat; /* 禁止图片重复（默认会平铺） */
+            background-size: cover; /* 图片自适应容器：覆盖整个区域（可能裁剪边缘） */
+            /* 可选：background-size: contain; 完整显示图片（可能留空白） */
+            
+            background-position: center; /* 图片居中显示 */
+            background-attachment: fixed; /* 滚动页面时，图片固定不跟随滚动（可选） */
+            
+            /* 补充：避免页面高度不足时背景不完整 */
+            min-height: 100vh; /* 让 body 最小高度等于屏幕高度 */
+            margin: 0; /* 清除默认边距 */
+        }
+
+#ul {
+  background: lemonchiffon;
+  width: 308px;
+  height: 306px;
+  position: relative;
+  padding-top: 2px;
+  border: 4px solid #000;
+  border-radius: 4px;
+  margin: 20px auto;
+}
+
+#ul li {
+  width: 100px;
+  height: 100px;
+  list-style-type: none;
+  background: url(bili.jpg) pink;
+  float: left;
+  margin: 0 0 2px 2px;
+  line-height: 100px;
+  text-align: center;
+  color: white;
+  text-shadow: 1px 1px 1px #000;
+  font-size: 20px;
+}
+
+/* #ul li.active {
+  background: lemonchiffon;
+} */
+
+.game-controls {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.game-info {
+  text-align: center;
+  margin: 10px 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.ranking {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 15px;
+  border: 2px solid #333;
+  border-radius: 10px;
+  background: #f9f9f9;
+}
+
+.ranking h3 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ranking-table th,
+.ranking-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.ranking-table th {
+  background-color: #4caf50;
+  color: white;
+}
+
+.share-section {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.share-btn {
+  padding: 10px 20px;
+  margin: 5px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.share-btn:hover {
+  background: #3367d6;
+}
+
+.current-level {
+  font-size: 20px;
+  font-weight: bold;
+  color: #e74c3c;
+  margin: 10px 0;
+}
+
+.image-preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 999;
+  border-radius: 4px;
+  transition: opacity 0.5s ease;
+}
+
+.image-preview.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 空方格样式*/
+#ul li.active {
+  background: transparent !important; 
+  border: none !important;
+  cursor: default; 
+}
