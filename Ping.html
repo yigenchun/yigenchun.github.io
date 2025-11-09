@@ -221,7 +221,7 @@
                     arr2.push(arr1[i]);
                 }
 
-                arr2.sort(() => Math.random() - 0.5);
+                // arr2.sort(() => Math.random() - 0.5);
                 arr2.push(arr1[this.len - 1]);
 
                 // 检查可解性
@@ -254,7 +254,7 @@
 
                 for (let i = 0; i < this.len; i++) {
                     // if (this.num >= 5) {
-                        this.aLi[i].innerHTML = i + 1;
+                    this.aLi[i].innerHTML = i + 1;
                     // }
 
                     this.aLi[i].style.position = 'absolute';
@@ -295,9 +295,9 @@
                 this.currentLevel = 3;
                 this.gameStarted = false;
                 this.imageSources = [
-                    'bili.jpg', 
-                    'img1.jpg', 
-                    'img3.jpg', 
+                    'bili.jpg',
+                    'img1.jpg',
+                    'img3.jpg',
                 ];
                 this.currentImageIndex = 0;
             }
@@ -364,8 +364,8 @@
 
             //切换图片
             changeImage(imageIndex) {
-                this.currentImageIndex = Number(imageIndex); 
-                this.resetGame(); 
+                this.currentImageIndex = Number(imageIndex);
+                this.resetGame();
                 this.showImagePreview();
             }
 
@@ -373,14 +373,14 @@
             //更新拼图碎片背景图
             updatePuzzleBackground() {
                 if (!this.puzzleGame || !this.puzzleGame.aLi) return;
-                const currentImage = this.imageSources[this.currentImageIndex]; 
-                const num = this.currentLevel; 
+                const currentImage = this.imageSources[this.currentImageIndex];
+                const num = this.currentLevel;
                 const pieces = this.puzzleGame.aLi;
 
                 // 循环给每个碎片设置新背景图
                 for (let i = 0; i < pieces.length; i++) {
                     pieces[i].style.backgroundImage = `url(${currentImage})`;
-                    
+
                     pieces[i].style.backgroundPosition =
                         (i % num) * -100 + "px " +
                         ((i - (i % num)) / num) * -100 + "px";
@@ -567,11 +567,13 @@
             }
 
             copyGameLink() {
-                navigator.clipboard.writeText(window.location.href).then(() => {
+                const fixedLink = 'https://yigenchun.github.io/Ping.html';
+
+                navigator.clipboard.writeText(fixedLink).then(() => {
                     alert('游戏链接已复制到剪贴板！');
                 }).catch(() => {
                     const textArea = document.createElement('textarea');
-                    textArea.value = window.location.href;
+                    textArea.value = fixedLink;
                     document.body.appendChild(textArea);
                     textArea.select();
                     document.execCommand('copy');
@@ -596,6 +598,4 @@
     </script>
 </body>
 
-
 </html>
-
