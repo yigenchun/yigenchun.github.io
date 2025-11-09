@@ -344,6 +344,7 @@
                         setTimeout(() => {
                             this.puzzleGame.init('ul', this.puzzleGame.num);
                             // 重置游戏状态并显示新图片
+                            this.updatePuzzleBackground();
                             this.resetState();
                             this.showImagePreview();
                         }, 1000);
@@ -594,5 +595,6 @@
         const gameManager = new GameManager();
     </script>
 </body>
+
 
 </html>
