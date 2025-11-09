@@ -4,23 +4,17 @@ ul {
   padding: 0;
 }
 
-    /* 给 body 元素设置背景（body 是页面的可视区域根容器） */
-        body {
-            /* 1. 设置背景图片路径（本地图片/网络图片） */
-            background-image: url("img4.jpg"); /* 替换为实际路径 */
-            
-            /* 2. 关键辅助属性（必加，避免图片重复/拉伸异常） */
-            background-repeat: no-repeat; /* 禁止图片重复（默认会平铺） */
-            background-size: cover; /* 图片自适应容器：覆盖整个区域（可能裁剪边缘） */
-            /* 可选：background-size: contain; 完整显示图片（可能留空白） */
-            
-            background-position: center; /* 图片居中显示 */
-            background-attachment: fixed; /* 滚动页面时，图片固定不跟随滚动（可选） */
-            
-            /* 补充：避免页面高度不足时背景不完整 */
-            min-height: 100vh; /* 让 body 最小高度等于屏幕高度 */
-            margin: 0; /* 清除默认边距 */
-        }
+body {
+  background-image: url("img4.jpg"); 
+
+  background-repeat: no-repeat; 
+  background-size: cover; 
+
+  background-position: center; 
+  background-attachment: fixed; 
+
+  min-height: 100vh;
+  margin: 0; 
 
 #ul {
   background: lemonchiffon;
@@ -141,7 +135,7 @@ ul {
 
 /* 空方格样式*/
 #ul li.active {
-  background: transparent !important; 
+  background: transparent !important;
   border: none !important;
-  cursor: default; 
+  cursor: default;
 }
