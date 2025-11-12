@@ -79,7 +79,6 @@
                 this.jian();
             }
 
-            // 判断是否完成拼图
             checkPing() {
                 let arr1 = [];
                 let arr2 = [];
@@ -124,7 +123,6 @@
                 return null;
             }
 
-            // 键盘移动
             jian() {
                 document.onkeydown = (ev) => {
                     ev = ev || event;
@@ -159,7 +157,6 @@
                 };
             }
 
-            // 判断是否可以移动
             canMove(li) {
                 const index = li.index;
                 const num = this.oLi.index;
@@ -173,7 +170,6 @@
                 }
             }
 
-            // 移动
             move(li) {
                 if (this.canMove(li)) {
                     li.style.left = this.arr[this.oLi.index][0] + 'px';
@@ -183,7 +179,6 @@
 
                     [this.oLi.index, li.index] = [li.index, this.oLi.index];
 
-                    // 调用步数移动计算
                     if (typeof gameManager !== 'undefined') {
                         gameManager.incrementMoveCount();
                     }
@@ -193,7 +188,6 @@
                 return false;
             }
 
-            // 点击事件
             bindClickEvents() {
                 for (let i = 0; i < this.len; i++) {
                     this.aLi[i].onclick = () => {
@@ -203,7 +197,6 @@
                 }
             }
 
-            // 定位拼图块
             positionPieces() {
                 let arr1 = [];
                 let arrA = [];
@@ -215,7 +208,6 @@
 
                 this.arr = arrA;
 
-                // 随机排序
                 let arr2 = [];
                 for (let i = 0; i < this.len - 1; i++) {
                     arr2.push(arr1[i]);
@@ -224,7 +216,6 @@
                 arr2.sort(() => Math.random() - 0.5);
                 arr2.push(arr1[this.len - 1]);
 
-                // 检查可解性
                 let arr3 = [];
                 let inversionCount = 0;
 
@@ -269,7 +260,6 @@
                 }
             }
 
-            // 生成拼图块
             generatePieces(num) {
                 this.oUl.style.width = 2 + num * 2 + num * 100 + "px";
                 this.oUl.style.height = num * 2 + num * 100 + "px";
@@ -554,16 +544,46 @@
                 });
             }
 
-            shareOnWechat() {
-                alert('请使用微信扫描分享页面！\n游戏成绩：' +
-                    document.getElementById('timer').textContent + ' 用时，' +
-                    this.moveCount + ' 步数');
+                       shareOnWechat() {
+                const gameUrl = "https://yigenchun.github.io/Ping.html";
+                const time = document.getElementById('timer').textContent;
+                const steps = this.moveCount;
+                const modal = document.createElement('div');
+                modal.className = 'share-modal';
+                modal.innerHTML = `
+                        <div class="share-content">
+                        <h3>微信扫码进入游戏</h3>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)}" class="share-qrcode" alt="游戏二维码">
+                        <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+                        <p>长按保存二维码，或直接扫码打开</p>
+                        <button class="share-close">关闭</button>
+    </div>
+`;
+                document.body.appendChild(modal);
+                modal.querySelector('.share-close').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
             }
 
             shareOnQQ() {
-                alert('已生成QQ分享链接！\n游戏成绩：' +
-                    document.getElementById('timer').textContent + ' 用时，' +
-                    this.moveCount + ' 步数');
+                const gameUrl = "https://yigenchun.github.io/Ping.html"; 
+                const time = document.getElementById('timer').textContent;
+                const steps = this.moveCount;
+                const modal = document.createElement('div');
+                modal.className = 'share-modal';
+                modal.innerHTML = `
+                    <div class="share-content">
+                    <h3>QQ扫码进入游戏</h3>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)}" class="share-qrcode" alt="游戏二维码">
+                    <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+                    <p>长按保存二维码，或直接扫码打开</p>
+                        <button class="share-close">关闭</button>
+    </div>
+`;
+                document.body.appendChild(modal);
+                modal.querySelector('.share-close').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                });
             }
 
             copyGameLink() {
@@ -600,4 +620,5 @@
 
 
 </html>
+
 
