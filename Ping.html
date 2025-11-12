@@ -546,7 +546,6 @@
 
                        shareOnWechat() {
                 const gameUrl = "https://yigenchun.github.io/Ping.html";
-                const logoUrl =  "https://yigenchun.github.io/logo.png"; 
                 const time = document.getElementById('timer').textContent;
                 const steps = this.moveCount;
                 const modal = document.createElement('div');
@@ -554,8 +553,7 @@
                 modal.innerHTML = `
                         <div class="share-content">
                         <h3>微信扫码进入游戏</h3>
-<!-- 修改后的二维码代码（带logo） -->
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)}&logo=${encodeURIComponent(logoUrl)}&logoSize=30" class="share-qrcode" alt="游戏二维码">                        <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)} class="share-qrcode" alt="游戏二维码">                        <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
                         <p>长按保存二维码，或直接扫码打开</p>
                         <button class="share-close">关闭</button>
     </div>
@@ -568,7 +566,6 @@
 
             shareOnQQ() {
                 const gameUrl = "https://yigenchun.github.io/Ping.html"; 
-                const logoUrl =  "https://yigenchun.github.io/logo.png"; 
                 const time = document.getElementById('timer').textContent;
                 const steps = this.moveCount;
                 const modal = document.createElement('div');
@@ -576,8 +573,7 @@
                 modal.innerHTML = `
                     <div class="share-content">
                     <h3>QQ扫码进入游戏</h3>
-<!-- 修改后的二维码代码（带logo） -->
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)}&logo=${encodeURIComponent(logoUrl)}&logoSize=30" class="share-qrcode" alt="游戏二维码">                    <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)} class="share-qrcode" alt="游戏二维码">                    <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
                     <p>长按保存二维码，或直接扫码打开</p>
                         <button class="share-close">关闭</button>
     </div>
@@ -622,6 +618,7 @@
 
 
 </html>
+
 
 
 
