@@ -4,8 +4,9 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>高级拼图在线小游戏</title>
+    <title>高级拼图游戏</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -27,6 +28,9 @@
             <option value="1">图片1</option>
             <option value="2">图片2</option>
         </select>
+    <!-- 添加文件上传按钮 -->
+    <input type="file" id="image-upload" accept="image/*" style="display:none" onchange="gameManager.handleImageUpload(event)">
+    <button onclick="document.getElementById('image-upload').click()">上传图片</button>
     </div>
 
     <div class="ranking">
@@ -49,6 +53,7 @@
         <button class="share-btn" onclick="gameManager.shareOnWechat()">微信分享</button>
         <button class="share-btn" onclick="gameManager.shareOnQQ()">QQ分享</button>
         <button class="share-btn" onclick="gameManager.copyGameLink()">复制链接</button>
+        <button class="share-btn" onclick="gameManager.manageCustomImages()">管理图片</button>
         <button class="share-btn" onclick="gameManager.clearRecord()" style="background: #e74c3c;">清除记录</button>
     </div>
 
@@ -79,26 +84,23 @@
                 this.jian();
             }
 
+            // 判断是否完成拼图
             checkPing() {
                 let arr1 = [];
                 let arr2 = [];
                 let n = 0;
-
                 for (let i = 0; i < this.len; i++) {
                     arr1.push(this.aLi[i].index);
                     arr2.push(this.arr[i][2]);
                 }
-
                 for (let i = 0; i < this.len; i++) {
                     if (arr1[i] === arr2[i]) {
                         n += 1;
                     }
                 }
-
                 if (n === this.len) {
                     alert('闯关成功');
                     this.num++;
-
                     if (this.num <= 8) {
                         setTimeout(() => {
                             this.init('ul', this.num);
@@ -107,12 +109,10 @@
                         alert('恭喜！你已通关所有难度！');
                         this.num = 8;
                     }
-
                     return true;
                 }
                 return false;
             }
-
             // 通过index找到li
             findLiByIndex(index) {
                 for (let i = 0; i < this.len; i++) {
@@ -123,10 +123,12 @@
                 return null;
             }
 
+            // 键盘移动
             jian() {
                 document.onkeydown = (ev) => {
                     ev = ev || event;
                     let targetLi = null;
+                    console.log(ev.keyCode)
 
                     switch (ev.keyCode) {
                         case 37: // 左
@@ -157,6 +159,7 @@
                 };
             }
 
+            // 判断是否可以移动
             canMove(li) {
                 const index = li.index;
                 const num = this.oLi.index;
@@ -170,6 +173,7 @@
                 }
             }
 
+            // 移动
             move(li) {
                 if (this.canMove(li)) {
                     li.style.left = this.arr[this.oLi.index][0] + 'px';
@@ -179,6 +183,7 @@
 
                     [this.oLi.index, li.index] = [li.index, this.oLi.index];
 
+                    // 调用步数移动计算
                     if (typeof gameManager !== 'undefined') {
                         gameManager.incrementMoveCount();
                     }
@@ -188,6 +193,7 @@
                 return false;
             }
 
+            // 点击事件
             bindClickEvents() {
                 for (let i = 0; i < this.len; i++) {
                     this.aLi[i].onclick = () => {
@@ -197,6 +203,7 @@
                 }
             }
 
+            // 定位拼图块
             positionPieces() {
                 let arr1 = [];
                 let arrA = [];
@@ -205,24 +212,22 @@
                     arr1.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
                     arrA.push([this.aLi[i].offsetLeft, this.aLi[i].offsetTop, i]);
                 }
-
                 this.arr = arrA;
-
+                // 随机排序
                 let arr2 = [];
                 for (let i = 0; i < this.len - 1; i++) {
                     arr2.push(arr1[i]);
                 }
-
-                arr2.sort(() => Math.random() - 0.5);
+                arr2.sort(() => Math.random()-0.5);
                 arr2.push(arr1[this.len - 1]);
 
+                // 检查可解性
                 let arr3 = [];
                 let inversionCount = 0;
 
                 for (let i = 0; i < this.len; i++) {
                     arr3.push(arr2[i][2]);
                 }
-
                 for (let i = 0; i < this.len; i++) {
                     let b = arr3[i];
                     for (let j = i; j < this.len; j++) {
@@ -232,7 +237,6 @@
                         }
                     }
                 }
-
                 if (inversionCount % 2 === 0) {
                     console.log('加油');
                 } else {
@@ -240,12 +244,11 @@
                     this.positionPieces();
                     return false;
                 }
-
                 arr1 = arr2;
-
                 for (let i = 0; i < this.len; i++) {
-                    // if (this.num >= 5) {
-                    this.aLi[i].innerHTML = i + 1;
+
+                    // if (this.num >= 4) {
+                        this.aLi[i].innerHTML = i + 1;
                     // }
 
                     this.aLi[i].style.position = 'absolute';
@@ -254,15 +257,14 @@
                     this.aLi[i].index = arr1[i][2];
                     this.aLi[i].style.margin = 0;
                     this.aLi[i].style.backgroundSize = this.num * 100 + 'px';
-                    this.aLi[i].style.backgroundPosition =
-                        (i % this.num) * -100 + "px " +
-                        ((i - (i % this.num)) / this.num) * -100 + "px";
+                    this.aLi[i].style.backgroundPosition =(i % this.num) * -100 + "px " +((i - (i % this.num)) / this.num) * -100 + "px";
                 }
             }
 
+            // 生成拼图块
             generatePieces(num) {
-                this.oUl.style.width = 2 + num * 2 + num * 100 + "px";
-                this.oUl.style.height = num * 2 + num * 100 + "px";
+                this.oUl.style.width =`${2 + num * 2 + num * 100}px`;
+                this.oUl.style.height = `${num * 2 + num * 100}px`;
 
                 let n = num * num;
                 let str = '';
@@ -286,10 +288,16 @@
                 this.gameStarted = false;
                 this.imageSources = [
                     'bili.jpg',
-                    'img1.jpg',
+                    'img1.png',
                     'img3.jpg',
                 ];
-                this.currentImageIndex = 0;
+                    
+        // 添加自定义图片存储
+        this.customImages = JSON.parse(localStorage.getItem('puzzleCustomImages') || '[]');
+        this.currentImageIndex = 0;
+        
+        // 初始化时更新选择框
+        setTimeout(() => this.updateImageSelect(), 0);
             }
 
             init(puzzleGame) {
@@ -297,11 +305,11 @@
                 this.updateLevelDisplay();
                 this.loadRankings();
                 this.showImagePreview();
-                this.overridePuzzleGameMethods();
+                this.overridePuzzleGameMethod();
             }
 
             // 重写拼图游戏方法
-            overridePuzzleGameMethods() {
+            overridePuzzleGameMethod() {
                 const originalMove = this.puzzleGame.move.bind(this.puzzleGame);
                 const originalCheckPing = this.puzzleGame.checkPing.bind(this.puzzleGame);
                 const originalInit = this.puzzleGame.init.bind(this.puzzleGame);
@@ -310,7 +318,7 @@
                 this.puzzleGame.move = (li) => {
                     // 第一次移动时开始计时
                     if (!this.gameStarted) {
-                        this.hideImagePreview();
+                        this.hideImage();
                         this.startTimer();
                         this.gameStarted = true;
                     }
@@ -351,10 +359,112 @@
                 };
             }
 
+            // 更新图片选择框
+            updateImageSelect() {
+                const select = document.querySelector('select[onchange*="changeImage"]');
+                if (!select) return;
+                
+                // 保存当前选中的值
+                const currentValue = select.value;
+                
+                // 清空选项（保留第一个默认选项）
+                select.innerHTML = `
+                    <option value="0">默认图片</option>
+                    <option value="1">图片1</option>
+                    <option value="2">图片2</option>
+                `;
+                
+                // 添加自定义图片选项
+                this.customImages.forEach((image, index) => {
+                    const option = document.createElement('option');
+                    option.value = (index + 3).toString(); // 从3开始，避免与默认图片冲突
+                    option.textContent = `自定义图片${index + 1}`;
+                    option.className = 'custom-image-option';
+                    select.appendChild(option);
+                });
+                
+                // 恢复选中的值
+                select.value = currentValue;
+            }
 
-            //切换图片
+            // 处理图片上传
+            handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                // 检查文件类型
+                if (!file.type.match('image.*')) {
+                    alert('请选择图片文件！');
+                    return;
+                }
+                
+                // 检查文件大小（限制为2MB）
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('图片大小不能超过2MB！');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = (e) => {
+                    // 将图片数据保存到自定义图片数组
+                    const imageData = e.target.result;
+                    this.customImages.push(imageData);
+                    
+                    // 保存到本地存储
+                    localStorage.setItem('puzzleCustomImages', JSON.stringify(this.customImages));
+                    
+                    // 更新选择框
+                    this.updateImageSelect();
+                    
+                    // 自动切换到新上传的图片
+                    const newIndex = this.imageSources.length + this.customImages.length - 1;
+                    this.changeImage(newIndex.toString());
+                    
+                    alert('图片上传成功！已切换到新图片。');
+                };
+                
+                reader.onerror = () => {
+                    alert('图片读取失败，请重试！');
+                };
+                
+                reader.readAsDataURL(file);
+                
+                // 清空文件输入，允许重复选择同一文件
+                event.target.value = '';
+            }
+
+
+                  // 修改获取当前图片的方法
+            getCurrentImage() {
+                if (this.currentImageIndex < this.imageSources.length) {
+                    // 返回默认图片
+                    return this.imageSources[this.currentImageIndex];
+                } else {
+                    // 返回自定义图片
+                    const customIndex = this.currentImageIndex - this.imageSources.length;
+                    return this.customImages[customIndex];
+                }
+            }
+
+           // 修改切换图片方法，支持自定义图片
             changeImage(imageIndex) {
-                this.currentImageIndex = Number(imageIndex);
+                const index = Number(imageIndex);
+                
+                if (index < this.imageSources.length) {
+                    // 选择默认图片
+                    this.currentImageIndex = index;
+                } else {
+                    // 选择自定义图片（从自定义图片数组中获取）
+                    const customIndex = index - this.imageSources.length;
+                    if (customIndex >= 0 && customIndex < this.customImages.length) {
+                        this.currentImageIndex = index;
+                    } else {
+                        alert('图片选择无效！');
+                        return;
+                    }
+                }
+                
                 this.resetGame();
                 this.showImagePreview();
             }
@@ -363,7 +473,7 @@
             //更新拼图碎片背景图
             updatePuzzleBackground() {
                 if (!this.puzzleGame || !this.puzzleGame.aLi) return;
-                const currentImage = this.imageSources[this.currentImageIndex];
+                const currentImage = this.getCurrentImage();
                 const num = this.currentLevel;
                 const pieces = this.puzzleGame.aLi;
 
@@ -389,19 +499,19 @@
                 // 创建新的预览层（使用当前选中的图片）
                 const preview = document.createElement('div');
                 preview.className = 'image-preview';
-                preview.style.backgroundImage = `url(${this.imageSources[this.currentImageIndex]})`;
+                preview.style.backgroundImage = `url(${this.getCurrentImage()})`;
                 document.getElementById('ul').appendChild(preview);
 
                 // 点击事件
                 preview.addEventListener('click', () => {
-                    this.hideImagePreview();
+                    this.hideImage();
                     this.startTimer();
                     this.gameStarted = true;
                 });
             }
 
             // 隐藏完整图片
-            hideImagePreview() {
+            hideImage() {
                 const preview = document.querySelector('.image-preview');
                 if (preview) {
                     preview.classList.add('hidden');
@@ -411,6 +521,60 @@
                             preview.parentNode.removeChild(preview);
                         }
                     }, 500);
+                }
+            }
+            
+            // 添加管理自定义图片的方法
+            manageCustomImages() {
+                if (this.customImages.length === 0) {
+                    alert('暂无自定义图片！');
+                    return;
+                }
+                
+                const modal = document.createElement('div');
+                modal.className = 'share-modal';
+                modal.innerHTML = `
+                    <div class="share-content" style="max-width: 500px;">
+                        <h3>管理自定义图片</h3>
+                        <div class="custom-images-list">
+                            ${this.customImages.map((image, index) => `
+                                <div class="custom-image-item">
+                                    <img src="${image}" alt="自定义图片${index + 1}" style="width: 100px; height: 100px; object-fit: cover;">
+                                    <div>
+                                        <p>自定义图片${index + 1}</p>
+                                        <button onclick="gameManager.deleteCustomImage(${index})" class="share-btn" style="background: #e74c3c; margin-top: 5px;">删除</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="share-close" style="margin-top: 20px;">关闭</button>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.querySelector('.share-close').onclick = () => {
+                    document.body.removeChild(modal);
+                };
+            }
+            
+            // 删除自定义图片
+            deleteCustomImage(index) {
+                if (confirm('确定要删除这张图片吗？')) {
+                    this.customImages.splice(index, 1);
+                    localStorage.setItem('puzzleCustomImages', JSON.stringify(this.customImages));
+                    this.updateImageSelect();
+                    
+                    // 如果当前使用的是被删除的图片，切换回默认图片
+                    const deletedImageIndex = this.imageSources.length + index;
+                    if (this.currentImageIndex === deletedImageIndex) {
+                        this.currentImageIndex = 0;
+                        this.resetGame();
+                        this.showImagePreview();
+                    }
+                    
+                    // 重新打开管理界面或刷新页面
+                    document.querySelector('.share-modal .share-close').click();
+                    setTimeout(() => this.manageCustomImages(), 100);
                 }
             }
 
@@ -544,8 +708,12 @@
                 });
             }
 
-                       shareOnWechat() {
+
+
+
+            shareOnWechat() {
                 const gameUrl = "https://yigenchun.github.io/Ping.html";
+
                 const time = document.getElementById('timer').textContent;
                 const steps = this.moveCount;
                 const modal = document.createElement('div');
@@ -553,19 +721,19 @@
                 modal.innerHTML = `
                         <div class="share-content">
                         <h3>微信扫码进入游戏</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)} class="share-qrcode" alt="游戏二维码">                        <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(gameUrl)}" class="share-qrcode" alt="游戏二维码">                        <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
                         <p>长按保存二维码，或直接扫码打开</p>
                         <button class="share-close">关闭</button>
-    </div>
-`;
+    </div>`;
                 document.body.appendChild(modal);
-                modal.querySelector('.share-close').addEventListener('click', () => {
+                modal.querySelector('.share-close').onclick = () => {
                     document.body.removeChild(modal);
-                });
+                };
             }
 
             shareOnQQ() {
-                const gameUrl = "https://yigenchun.github.io/Ping.html"; 
+                const gameUrl = "https://yigenchun.github.io/Ping.html";
+
                 const time = document.getElementById('timer').textContent;
                 const steps = this.moveCount;
                 const modal = document.createElement('div');
@@ -573,25 +741,25 @@
                 modal.innerHTML = `
                     <div class="share-content">
                     <h3>QQ扫码进入游戏</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)} class="share-qrcode" alt="游戏二维码">                    <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(gameUrl)}" class="share-qrcode" alt="游戏二维码">                    <div class="share-score">游戏成绩：${time} 用时，${steps} 步数</div>
                     <p>长按保存二维码，或直接扫码打开</p>
                         <button class="share-close">关闭</button>
-    </div>
-`;
+    </div>`;
                 document.body.appendChild(modal);
-                modal.querySelector('.share-close').addEventListener('click', () => {
+                modal.querySelector('.share-close').onclick = () => {
                     document.body.removeChild(modal);
-                });
+                };
             }
 
-            copyGameLink() {
-                const fixedLink = 'https://yigenchun.github.io/Ping.html';
 
-                navigator.clipboard.writeText(fixedLink).then(() => {
+
+            copyGameLink() {
+                const Link = 'https://yigenchun.github.io/Ping.html';
+                navigator.clipboard.writeText(Link).then(() => {
                     alert('游戏链接已复制到剪贴板！');
                 }).catch(() => {
                     const textArea = document.createElement('textarea');
-                    textArea.value = fixedLink;
+                    textArea.value = Link;
                     document.body.appendChild(textArea);
                     textArea.select();
                     document.execCommand('copy');
@@ -616,9 +784,4 @@
     </script>
 </body>
 
-
 </html>
-
-
-
-
